@@ -10,21 +10,49 @@ const SpecialColumn = observer(({ row }) => {
   console.log(row);
   return <span>{row.name}</span>;
 });
+const CheckedColumn = observer(({ row }) => {
+  return (
+    <Checkbox
+      onChange={(evt) => {
+        row.setChecked(evt.target.checked);
+      }}
+      checked={row.checked}
+    />
+  );
+});
+const CheckedHeader = observer(({ rows }) => {
+  return (
+    <Checkbox
+      style={{ marginRight: "5px" }}
+      checked={!rows.some((item) => !item.checked)}
+      onChange={(evt) => {
+        rows.forEach((item) => {
+          item.setChecked(evt.target.checked);
+        });
+      }}
+    />
+  );
+});
 class Row {
   name = "";
   age = 0;
   address = "";
   key = "";
+  checked = false;
   constructor(data) {
     this.name = data.name;
     this.age = data.age;
     this.address = data.address;
     this.key = data.key;
     this.tags = data.tags;
+    this.checked = data.checked;
     makeAutoObservable(this);
   }
   setName(name) {
     this.name = name;
+  }
+  setChecked(checked) {
+    this.checked = checked;
   }
 }
 export default function MobxTable() {
@@ -33,19 +61,8 @@ export default function MobxTable() {
       title: "选择",
       dataIndex: "checked",
       key: "checked",
-      render: (val, record) => {
-        return (
-          <Checkbox
-            onChange={(evt) => {
-              record.checked = evt.target.checked;
-              let d = data.map((item) => {
-                return item;
-              });
-              setData(d);
-            }}
-            checked={val}
-          />
-        );
+      render: (val, row) => {
+        return <CheckedColumn row={row} />;
       },
     },
     {
@@ -136,6 +153,7 @@ export default function MobxTable() {
     },
   ]);
   const items = useMemo(() => {
+    // debugger;
     return data.map((item) => {
       return new Row(item);
     });
@@ -153,17 +171,7 @@ export default function MobxTable() {
                 console.log("33");
                 return (
                   <th {...left}>
-                    <Checkbox
-                      style={{ marginRight: "5px" }}
-                      checked={!data.some((item) => !item.checked)}
-                      onChange={(evt) => {
-                        let d = data.map((item) => {
-                          item.checked = evt.target.checked;
-                          return item;
-                        });
-                        setData(d);
-                      }}
-                    />
+                    <CheckedHeader rows={items} />
                     {children}
                   </th>
                 );
